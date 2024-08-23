@@ -10,7 +10,7 @@ app.use(cors())
 
 app.set('view engine', 'ejs')
 app.set('views', './views')
-const port = process.env.SERVER_PORT | 8000;
+const port = process.env.SERVER_PORT || 8000;
 
 
 const userRoute = require('./routes/userRoute')
@@ -18,7 +18,7 @@ app.use('/api', userRoute)
 
 
 const authRoute = require('./routes/authRoute')
-app.use('/api', authRoute)
+app.use('/', authRoute)
 
 
 const journalRoute = require('./routes/journalRoute')
@@ -28,6 +28,9 @@ app.use('/api', journalRoute)
 const templateRoute = require('./routes/templateRoute')
 app.use('/api', templateRoute)
 
+
+const formRoute = require('./routes/formRoute')
+app.use('/api', formRoute)
 
 
 app.listen(port, function() {

@@ -31,6 +31,40 @@ const createJournal = async (req, res) => {
     }
 }
 
+const getAllJournal = async(req, res) => {
+    const user_id = req.user.user._id
+    try {
+        const journal = await Journal.find({
+            user_id
+        }).populate('template_id').populate('user_id')
+
+        if (!journal) {
+            return res.status(404).json({ message: 'Journal not found' })
+        }
+
+        res.status(200).json(journal)
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching journal', error: err.message })
+    }
+}
+
+const getTextAllJournal = async(req, res) => {
+    const user_id = req.user.user._id
+    try {
+        const journal = await Journal.find({
+            user_id
+        }).select('text')
+
+        if (!journal) {
+            return res.status(404).json({ message: 'Journal not found' })
+        }
+
+        res.status(200).json(journal)
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching journal', error: err.message })
+    }
+}
+
 const getJournalByDate = async(req, res) => {
     const { template_id, day, month, year } = req.query
     const user_id = req.user.user._id
@@ -90,12 +124,30 @@ const getJournalByMonthNYear = async (req, res) => {
     }
 }
 
+const getJournalById = async (req, res) => {
+    const user_id = req.user.user._id;
+    const journalId = req.params.journalId;
+
+    try {
+
+        const journals = await Journal.findOne({
+            _id: journalId,
+            user_id: user_id
+        }).populate('template_id')
+
+        res.status(200).json(journals)
+
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching journal by user and date', error: err.message })
+    }
+}
+
 const updateJournal = async (req, res) => {
     const user_id = req.user.user._id;
     const journalId = req.params.journalId;
-    const { header, text, template_id, date } = req.body;
+    const { header, text, date } = req.body;
 
-    if (!header || !text || !template_id || !date) {
+    if (!header || !text || !date) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -111,7 +163,6 @@ const updateJournal = async (req, res) => {
 
         journal.header = header;
         journal.text = text;
-        journal.template_id = template_id;
         journal.date = date;
 
         const updatedJournal = await journal.save();
@@ -153,6 +204,9 @@ module.exports = {
     createJournal,
     getJournalByDate,
     getJournalByMonthNYear,
+    getAllJournal,
+    getTextAllJournal,
+    getJournalById,
     updateJournal,
     deleteJournal
 }

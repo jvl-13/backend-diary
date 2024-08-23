@@ -8,6 +8,10 @@ const templateSchema = new mongoose.Schema({
     color: {
         type: String,
         required: true
+    },
+    link: {
+        type: String,
+        required: true
     }
 })
 

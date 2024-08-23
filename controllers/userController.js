@@ -23,7 +23,7 @@ const userRegister = async(req, res) => {
         if(isExists){
             return res.status(400).json({
                 success: false,
-                msg: 'Email already exists'
+                msg: 'Email đã được đăng ký! Vui lòng đăng nhập.'
             })
         }
 
@@ -34,12 +34,12 @@ const userRegister = async(req, res) => {
         })
         const userData = await user.save()
 
-        const msg = '<p>Xin chào, cảm ơn bạn đã đăng ký tài khoản với chúng tôi, vui lòng click vào link bên dưới để kích hoạt tài khoản của bạn</p> <hr> <p><a href="http://localhost:3000/mail-verification?id='+userData._id+'">Xác thực email</a></p>'
+        const msg = '<p>Xin chào, cảm ơn bạn đã đăng ký tài khoản với chúng tôi, vui lòng click vào link bên dưới để kích hoạt tài khoản của bạn</p> <hr> <p><a href="http://localhost:8000/mail-verification?id='+userData._id+'">Xác thực email</a></p>'
         mailer.sendMail(email, 'Mail Verification', msg)
         
         return res.status(200).json({
             success: true,
-            msg: 'Registered Successfully!',
+            msg: 'Đăng ký tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.',
             user: userData
         })
     } catch (error) {
@@ -50,36 +50,32 @@ const userRegister = async(req, res) => {
     }
 }
 
-const mailVerification = async(req, res) =>{
+const mailVerification = async (req, res) => {
     try {
-        if(req.params.id == undefined) {
-            return res.render('404')
+        if (req.query.id === undefined) {
+            return res.render('404');
         }
 
-        const userData = await User.findOne({_id: req.params.id})
+        const userData = await User.findOne({ _id: req.query.id });
 
         if (userData) {
-            if (userData.is_verified == 1) {
-                return res.render('mail-verification', {message: 'Email của bạn đã được xác thực. Vui lòng trở lại đăng nhập!'})
+            if (userData.is_verified === 1) {
+                return res.render('mail-verification', { message: 'Email của bạn đã được xác thực. Vui lòng trở lại đăng nhập!' });
             }
 
-            await User.findByIdAndUpdate({ _id: req.params.id }, {
-                $set: {
-                    is_verified: 1
-                }
-            })
-            return res.render('mail-verification', {message: 'Bạn đã xác thực email thành công. Vui lòng trở lại đăng nhập!'})
+            // Correct the update statement to use req.query.id
+            await User.findByIdAndUpdate(req.query.id, { $set: { is_verified: 1 } });
 
-        }
-        else {
-            return res.render('mail-verification', {message: 'User not found!'})
+            return res.render('mail-verification', { message: 'Bạn đã xác thực email thành công. Vui lòng trở lại đăng nhập!' });
+        } else {
+            return res.render('mail-verification', { message: 'User not found!' });
         }
         
     } catch (error) {
-        console.log(error.message)
-        return res.render('404')
+        console.log(error.message);
+        return res.render('404');
     }
-}
+};
 
 const sendMailVerification = async(req, res) => {
     try {
@@ -108,7 +104,7 @@ const sendMailVerification = async(req, res) => {
             })
         }
 
-        const msg = '<p>Xin chào, cảm ơn bạn đã đăng ký tài khoản với chúng tôi, vui lòng click vào link bên dưới để kích hoạt tài khoản của bạn</p> <hr> <p><a href="http://localhost:3000/mail-verification?id='+userData._id+'">Xác thực email</a></p>'
+        const msg = '<p>Xin chào, cảm ơn bạn đã đăng ký tài khoản với chúng tôi, vui lòng click vào link bên dưới để kích hoạt tài khoản của bạn</p> <hr> <p><a href="http://localhost:8000/mail-verification?id='+userData._id+'">Xác thực email</a></p>'
         mailer.sendMail(userData.email, 'Mail Verification', msg)
         
         return res.status(200).json({
@@ -146,7 +142,7 @@ const forgotPassword = async (req, res) => {
         }
 
         const randomString = randomstring.generate()
-        const msg = '<p>Xin chào '+userData.email+', vui lòng lấy lại mật khẩu của bạn <a href = "http://localhost:3000/reset-password?token='+randomString+'">Ở đây</a></p>' 
+        const msg = '<p>Xin chào '+userData.email+', vui lòng lấy lại mật khẩu của bạn <a href = "http://localhost:8000/reset-password?token='+randomString+'">Ở đây</a></p>' 
         await PasswordReset.deleteMany({ user_id: userData._id})
         const passwordReset = new PasswordReset({
             user_id: userData._id,
@@ -238,7 +234,7 @@ const loginUser = async(req, res) => {
     try {
         const errors = validationResult(req)
         if(!errors.isEmpty()) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 mgs: 'Errors',
                 errors: errors.array()
@@ -249,24 +245,24 @@ const loginUser = async(req, res) => {
 
         const userData = await User.findOne({email})
         if(!userData) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                mgs: 'Email and password are incorrect!',
+                mgs: 'Email hoặc mật khẩu không đúng!',
             })
         }
 
         const passwordMatch = await bcrypt.compare(password, userData.password)
         if (!passwordMatch) {
-            return res.status(400).json({
+            return res.status(402).json({
                 success: false,
-                mgs: 'Email and password are incorrect!',
+                mgs: 'Email hoặc mật khẩu không đúng!',
             })
         }
 
         if (userData.is_verified == 0) {
-            return res.status(400).json({
+            return res.status(403).json({
                 success: false,
-                mgs: 'Please verify your accout first!',
+                mgs: 'Vui lòng xác thực tài khoản trong email!',
             })
         }
 
@@ -276,7 +272,7 @@ const loginUser = async(req, res) => {
 
         return res.status(200).json({
             success: true,
-            msg: 'Login Successfully!',
+            msg: 'Đăng nhập thành công!',
             user: userData,
             accessToken: accessToken,
             tokenType: 'Bearer'
