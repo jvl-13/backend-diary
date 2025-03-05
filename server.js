@@ -1,7 +1,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 var cors = require('cors')
-mongoose.connect('mongodb+srv://laivtn18:ua4zaR4hs6Si1q2H@cluster0.c3i2zts.mongodb.net/diary?retryWrites=true&w=majority&appName=Cluster0')
+mongoose.connect('mongodb+srv://vtnlmongodb:nfYbDwQEAqfVMTAc@cluster0.qrknz.mongodb.net/diary?retryWrites=true&w=majority&appName=Cluster0')
+//mongodb+srv://vtnlmongodb:<db_password>@cluster0.qrknz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 
 const express = require('express');
 const app = express();
